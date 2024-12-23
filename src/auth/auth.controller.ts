@@ -9,7 +9,7 @@ export class AuthController {
 
   @Post('login')
   login() {
-    const user = { id: 'user123', role: 'principal' }; // Example user, you can modify this logic
+    const user = { id: 'user123', role: 'admin' }; // Example user, you can modify this logic
     const token = this.jwtAuthService.generateToken(user);
     
     return { access_token: token };

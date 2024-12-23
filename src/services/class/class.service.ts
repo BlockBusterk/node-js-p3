@@ -100,7 +100,7 @@ export class ClassService {
             }
            
             const updateClass = Object.assign(classD,updateClassDto)
-            const index = classes.indexOf(classD)
+            const index = classes.map(e => e.id).indexOf(classD)
             classes[index] = updateClass;
             writeData(classPath, classes)
             return {
@@ -129,7 +129,7 @@ export class ClassService {
       if(!classD){
           throw new ErrorResponse('This class is not exist', 404);
       }
-      const index = classes.indexOf(classD)
+      const index = classes.map(e => e.id).indexOf(classD)
       classes.splice(index,1)
       writeData(classPath, classes)
       return {

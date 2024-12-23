@@ -107,6 +107,9 @@ export class StudentService {
     try {
       let students = readJsonFileAsync(studentPath);
       const student = checkStudentById(id);
+      const index = students.map(e => e.id).indexOf(id);
+      console.log("student", student)
+      console.log("index",index)
       if (!student) {
         throw new ErrorResponse('This student is not exist', 404);
       }
@@ -124,7 +127,7 @@ export class StudentService {
         );
       }
       const updateStudent = Object.assign(student, updateStudentDto);
-      const index = students.indexOf(student);
+      
       students[index] = updateStudent;
       writeData(studentPath, students);
       return {
@@ -151,7 +154,7 @@ export class StudentService {
       if (!student) {
         throw new ErrorResponse('This student is not exist', 404);
       }
-      const index = students.indexOf(student);
+      const index = students.map(e => e.id).indexOf(id);
       students.splice(index, 1);
       writeData(studentPath, students);
       return {
