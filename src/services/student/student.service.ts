@@ -1,28 +1,26 @@
 import { Body, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CreateStudentDto } from 'src/dto/student/create-student.dto';
 import { UpdateStudentDto } from 'src/dto/student/update-student.dto';
+import { Class } from 'src/entities/class.entity';
+import { Student } from 'src/entities/student.entity';
 import { ErrorResponse } from 'src/errors/ErrorResponse';
-import {
-  checkClassById,
-  checkClassByName,
-  checkStudentById,
-  checkStudentByName,
-  generateRandomID,
-  readJsonFileAsync,
-  writeData,
-} from 'src/utils/utils';
-
-const studentPath = '../../data/students.json';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class StudentService {
+  constructor(
+    @InjectRepository(Student)
+    private readonly studentRepository: Repository<Student>,
+    @InjectRepository(Class)
+    private readonly classRepository: Repository<Class>,
+  ) {}
   async getAllStudents() {
     try {
-      let students = readJsonFileAsync(studentPath);
+      let students = await this.studentRepository.find();
       return {
         status: 'sucess',
         requestedAt: Date.now(),
-        count: students.length,
         data: {
           students: students,
         },
@@ -40,8 +38,9 @@ export class StudentService {
 
   async createStudent(createStudentDto: CreateStudentDto) {
     try {
-      let students = readJsonFileAsync(studentPath);
-      const student = checkStudentByName(createStudentDto.name);
+      const student = await this.studentRepository.findOneBy({
+        name: createStudentDto.name,
+      });
       if (student) {
         throw new ErrorResponse(
           'There is student with that name',
@@ -49,22 +48,20 @@ export class StudentService {
           createStudentDto,
         );
       }
-      if (!checkClassById(createStudentDto.classId)) {
+      const checkClass = await this.classRepository.findOneBy({
+        id: createStudentDto.classId,
+      });
+      if (!checkClass) {
         throw new ErrorResponse(
           'The student must belong to available class',
           404,
         );
       }
-      const newStudent = {
-        id: generateRandomID('stu', 8),
-        ...createStudentDto,
-      };
-      students.push(newStudent);
-      writeData(studentPath, students);
+      const newStudent = await this.studentRepository.create(createStudentDto);
+      await this.studentRepository.save(newStudent);
       return {
         status: 'sucess',
         requestedAt: Date.now(),
-        count: students.length,
         data: {
           student: newStudent,
         },
@@ -75,14 +72,15 @@ export class StudentService {
         throw error; // Re-throw the original ErrorResponse
       } else {
         // If it's not an ErrorResponse, create a new one
+        console.log('error', error);
         throw new ErrorResponse('An unexpected error occurred', 500);
       }
     }
   }
 
-  async getStudentById(id: string) {
+  async getStudentById(idStudent: string) {
     try {
-      const student = checkStudentById(id);
+      const student = await this.studentRepository.findOneBy({ id: idStudent });
       if (!student) {
         throw new ErrorResponse('This student is not exist', 404);
       }
@@ -105,31 +103,27 @@ export class StudentService {
 
   async updateStudent(id: string, updateStudentDto: UpdateStudentDto) {
     try {
-      let students = readJsonFileAsync(studentPath);
-      const student = checkStudentById(id);
-      const index = students.map(e => e.id).indexOf(id);
-      console.log("student", student)
-      console.log("index",index)
+      const student = await this.studentRepository.findOneBy({ id });
       if (!student) {
         throw new ErrorResponse('This student is not exist', 404);
       }
-      let studentName = students.find(
-        (el: { name: string; id: string }) =>
-          el.name === updateStudentDto.name && el.id !== id,
-      );
-      if (studentName) {
+      let studentName = await this.studentRepository.findBy({
+        name: updateStudentDto.name,
+      });
+      if (studentName.length > 1) {
         throw new ErrorResponse('There is student with that name', 404);
       }
-      if (!checkClassById(updateStudentDto.classId)) {
+      let classE = await this.classRepository.findOneBy({
+        id: updateStudentDto.classId,
+      });
+      if (!classE) {
         throw new ErrorResponse(
           'The student must belong to available class',
           404,
         );
       }
       const updateStudent = Object.assign(student, updateStudentDto);
-      
-      students[index] = updateStudent;
-      writeData(studentPath, students);
+      await this.studentRepository.save(updateStudent);
       return {
         status: 'sucess',
         requestedAt: Date.now(),
@@ -149,14 +143,11 @@ export class StudentService {
 
   async deleteStudent(id: string) {
     try {
-      let students = readJsonFileAsync(studentPath);
-      const student = checkStudentById(id);
+      const student = await this.studentRepository.findOneBy({ id });
       if (!student) {
         throw new ErrorResponse('This student is not exist', 404);
       }
-      const index = students.map(e => e.id).indexOf(id);
-      students.splice(index, 1);
-      writeData(studentPath, students);
+      await this.studentRepository.remove(student);
       return {
         status: 'sucess',
         requestedAt: Date.now(),
@@ -176,16 +167,18 @@ export class StudentService {
 
   async getStudentByName(name: string) {
     try {
-      let students = readJsonFileAsync(studentPath);
       const studentName = String(name || '');
 
       if (!studentName.trim()) {
         throw new ErrorResponse('Name is required', 404);
       }
-
-      const matchingStudents = students.filter((student: { name: string }) =>
-        student.name.toLowerCase().includes(studentName.toLowerCase()),
-      );
+      const matchingStudents = await this.studentRepository
+        .createQueryBuilder('student')
+        .where('student.name ILIKE :name', { name: `%${studentName}%` })
+        .getMany();
+      // const matchingStudents = students.filter((student: { name: string }) =>
+      //   student.name.toLowerCase().includes(studentName.toLowerCase()),
+      // );
 
       if (matchingStudents.length === 0) {
         throw new ErrorResponse('No student found with that name', 404);
@@ -209,21 +202,22 @@ export class StudentService {
 
   async getStudentByClassName(name: string) {
     try {
-      let students = readJsonFileAsync(studentPath);
       const className = String(name || '');
 
       if (!className.trim()) {
-        throw new ErrorResponse('Name is required', 404);
+        throw new ErrorResponse('Class Name is required', 404);
       }
 
-      const classD = checkClassByName(className);
+      const classD = await this.classRepository.findOneBy({ name: className });
       if (!classD) {
         throw new ErrorResponse('This class is not exist', 404);
       }
+      console.log(classD);
 
-      const matchingStudents = students.filter(
-        (student: { classId: string }) => classD.id === student.classId,
-      );
+      const matchingStudents = await this.studentRepository
+        .createQueryBuilder('student')
+        .where('student.classId = :classId', { classId: classD.id })
+        .getMany();
 
       if (matchingStudents.length === 0) {
         throw new ErrorResponse('No student found with that class', 404);

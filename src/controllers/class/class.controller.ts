@@ -3,6 +3,7 @@ import { ClassService } from '../../services/class/class.service';
 import { Roles } from 'src/auth/decorators/role.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/role.guard';
+import { CreateClassDto } from 'src/dto/class/create-class.dto';
 
 @Controller('classes')
 export class ClassController {
@@ -20,7 +21,7 @@ export class ClassController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin','principal')
   @Post()
-  async createClass(@Body() createClassDto: any) {
+  async createClass(@Body() createClassDto: CreateClassDto) {
     return await this.classService.createClass(createClassDto);
   }
 

@@ -1,54 +1,57 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CreateClassDto } from 'src/dto/class/create-class.dto';
+import { UpdateClassDto } from 'src/dto/class/update-class.dto';
+import { Class } from 'src/entities/class.entity';
+import { Student } from 'src/entities/student.entity';
 import { ErrorResponse } from 'src/errors/ErrorResponse';
-import { checkClassById, checkClassByName, checkStudentById, generateRandomID, readJsonFileAsync, writeData } from 'src/utils/utils';
-
-const classPath = '../../data/classes.json'
-
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ClassService {
- 
+ constructor(
+     @InjectRepository(Student)
+     private readonly studentRepository: Repository<Student>,
+     @InjectRepository(Class)
+     private readonly classRepository: Repository<Class>,
+   ){}
 
   async getAllClasses() {
     try {
-        let classes = readJsonFileAsync(classPath)
-          return {
-                status: "sucess",
-                requestedAt: Date.now(),
-                count: classes.length,
-                data: {
-                    classes: classes
-                }
-            };
-        } catch (error) {
-            if (error instanceof ErrorResponse) {
-                throw error; // Re-throw the original ErrorResponse
-            } else {
-                // If it's not an ErrorResponse, create a new one
-                console.log(error)
-                throw new ErrorResponse('An unexpected error occurred', 500);
-            }
-  }
+        let classes = await this.classRepository.find();
+        return {
+          status: 'sucess',
+          requestedAt: Date.now(),
+          data: {
+            classes: classes,
+          },
+        };
+      } catch (error) {
+        if (error instanceof ErrorResponse) {
+          throw error; // Re-throw the original ErrorResponse
+        } else {
+          // If it's not an ErrorResponse, create a new one
+          console.log(error);
+          throw new ErrorResponse('An unexpected error occurred', 500);
+        }
+      }
 }
 
   async createClass(createClassDto: CreateClassDto) {
     try {
-        let classes = readJsonFileAsync(classPath)
-            const classD = checkClassByName(createClassDto.name) 
+        
+            const classD = await this.classRepository.findOneBy({name: createClassDto.name}) 
             console.log("classD", classD)
             if(classD){
                 throw new ErrorResponse('There is class with that name', 404, createClassDto);
             }
-            const newClass = { id: generateRandomID('cla',8), ...createClassDto };
-            classes.push(newClass);
-            writeData(classPath, classes)
+            const newClass = await this.classRepository.create(createClassDto);
+            await this.classRepository.save(newClass)
             return {
                 status: "sucess",
                 requestedAt: Date.now(),
-                count: classes.length,
                 data: {
-                    class: classD
+                    class: newClass
                 }
             };
         } catch (error) {
@@ -64,45 +67,42 @@ export class ClassService {
 
   async getClassById(id: string) {
     try {
-            const classD = checkClassById(id) 
-            if(!classD){
-                throw new ErrorResponse('This class is not exist', 404);
-            }
-            return {
-                status: "sucess",
-                requestedAt: Date.now(),
-                data: {
-                    class: classD
-                }
-            };
-        } catch (error) {
-            // Handle ErrorResponse and non-ErrorResponse errors differently
+        const classD = await this.classRepository.findOneBy({id});
+        if (!classD) {
+          throw new ErrorResponse('This class is not exist', 404);
+        }
+        return {
+          status: 'sucess',
+          requestedAt: Date.now(),
+          data: {
+            class: classD,
+          },
+        };
+      } catch (error) {
         if (error instanceof ErrorResponse) {
-            throw error; // Re-throw the original ErrorResponse
+          throw error; // Re-throw the original ErrorResponse
         } else {
-            // If it's not an ErrorResponse, create a new one
-            throw new ErrorResponse('An unexpected error occurred', 500);
+          // If it's not an ErrorResponse, create a new one
+          throw new ErrorResponse('An unexpected error occurred', 500);
         }
-        }
+      }
        
       }
 
-  async updateClass(id: string, updateClassDto: any) {
+  async updateClass(id: string, updateClassDto: UpdateClassDto) {
     try {
-        let classes = readJsonFileAsync(classPath)
-            const classD = checkClassById(id) 
+        
+            const classD = await this.classRepository.findOneBy({id})
             if(!classD){
                 throw new ErrorResponse('This class is not exist', 404);
             }
-            let className = classes.find( (el: { name: string; id:string }) => (el.name === updateClassDto.name && el.id !== id));
+            let className = await this.classRepository.findOneBy({name: updateClassDto.name})
             if(className){
                 throw new ErrorResponse('There is class with that name', 404);
             }
            
             const updateClass = Object.assign(classD,updateClassDto)
-            const index = classes.map(e => e.id).indexOf(classD)
-            classes[index] = updateClass;
-            writeData(classPath, classes)
+            await this.classRepository.save(updateClass)
             return {
                 status: "sucess",
                 requestedAt: Date.now(),
@@ -124,14 +124,11 @@ export class ClassService {
 
   async deleteClass(id: string) {
     try {
-    let classes = readJsonFileAsync(classPath)
-      const classD = checkClassById(id) 
+      const classD = await this.classRepository.findOneBy({id}) 
       if(!classD){
           throw new ErrorResponse('This class is not exist', 404);
       }
-      const index = classes.map(e => e.id).indexOf(classD)
-      classes.splice(index,1)
-      writeData(classPath, classes)
+      await this.classRepository.remove(classD);
       return {
           status: "sucess",
           requestedAt: Date.now(),
