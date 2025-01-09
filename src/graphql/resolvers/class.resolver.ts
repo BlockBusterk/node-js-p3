@@ -26,7 +26,7 @@ export class ClassResolver {
   }
 
   @Mutation(() => ClassModel)
-  async updateStudent(
+  async updateClass(
     @Args('id') id: string,
     @Args('updateClassInput') updateClassInput: UpdateClassInput,
   ) {
@@ -35,7 +35,7 @@ export class ClassResolver {
   }
 
   @Mutation(() => ClassModel)
-  async deletedeleteClass(@Args('id') id: string) {
+  async deleteClass(@Args('id') id: string) {
     return (await this.classService.deleteClass(id)).data.class;
   }
 }

@@ -22,8 +22,8 @@ export class StudentResolver {
   }
 
   @Query(() => [StudentModel])
-  async getStudentByClassName(@Args('classId') classId: string) {
-    return (await this.studentService.getStudentByName(classId)).data.student;
+  async getStudentByClassName(@Args('className') className: string) {
+    return (await this.studentService.getStudentByClassName(className)).data.student;
   }
 
 
@@ -44,7 +44,7 @@ export class StudentResolver {
   }
 
   @Mutation(() => StudentModel)
-  async deletedeleteStudent(@Args('id') id: string ) {
+  async deleteStudent(@Args('id') id: string ) {
     return (await this.studentService.deleteStudent(id)).data.student;
   }
 

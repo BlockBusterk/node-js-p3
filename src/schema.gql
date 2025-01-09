@@ -16,7 +16,7 @@ type ClassModel {
 type Query {
   getStudentById(id: String!): StudentModel!
   getStudentByName(name: String!): [StudentModel!]!
-  getStudentByClassName(classId: String!): [StudentModel!]!
+  getStudentByClassName(className: String!): [StudentModel!]!
   getAllStudents: [StudentModel!]!
   getClassById(id: String!): ClassModel!
   getAllClasses: [ClassModel!]!
@@ -24,10 +24,11 @@ type Query {
 
 type Mutation {
   createStudent(createStudentInput: CreateStudentInput!): StudentModel!
-  updateStudent(id: String!, updateClassInput: UpdateClassInput!): ClassModel!
-  deletedeleteStudent(id: String!): StudentModel!
+  updateStudent(id: String!, updateStudentInput: UpdateStudentInput!): StudentModel!
+  deleteStudent(id: String!): StudentModel!
   createClass(createClassInput: CreateClassInput!): ClassModel!
-  deletedeleteClass(id: String!): ClassModel!
+  updateClass(id: String!, updateClassInput: UpdateClassInput!): ClassModel!
+  deleteClass(id: String!): ClassModel!
 }
 
 input CreateStudentInput {
@@ -35,10 +36,15 @@ input CreateStudentInput {
   classId: String!
 }
 
-input UpdateClassInput {
-  name: String!
+input UpdateStudentInput {
+  name: String
+  classId: String
 }
 
 input CreateClassInput {
   name: String!
+}
+
+input UpdateClassInput {
+  name: String
 }
