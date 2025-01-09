@@ -15,7 +15,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    // Log the request body (if needed for debugging)
     console.log('Request Body:', request.body);
 
     if (exception instanceof ErrorResponse) {
@@ -24,7 +23,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       response.status(exception.errorCode).json({
         errorCode: exception.errorCode,
         devMessage: exception.devMessage,
-        data: exception.data ?? request.body, // Optionally return exception-specific data
+        data: exception.data ?? request.body, 
       });
     } else if (exception instanceof HttpException) {
       // Handle standard HttpException (e.g., thrown by NestJS internally)
@@ -34,7 +33,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       response.status(status).json({
         errorCode: status,
         devMessage: errorResponse['message'] || 'An error occurred',
-        data: request.body, // Optionally return the request body
+        data: request.body, 
       });
     } else {
       // Fallback for unexpected exceptions

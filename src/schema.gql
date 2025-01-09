@@ -1,0 +1,44 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type StudentModel {
+  id: String!
+  name: String!
+  classId: String!
+}
+
+type ClassModel {
+  id: String!
+  name: String!
+}
+
+type Query {
+  getStudentById(id: String!): StudentModel!
+  getStudentByName(name: String!): [StudentModel!]!
+  getStudentByClassName(classId: String!): [StudentModel!]!
+  getAllStudents: [StudentModel!]!
+  getClassById(id: String!): ClassModel!
+  getAllClasses: [ClassModel!]!
+}
+
+type Mutation {
+  createStudent(createStudentInput: CreateStudentInput!): StudentModel!
+  updateStudent(id: String!, updateClassInput: UpdateClassInput!): ClassModel!
+  deletedeleteStudent(id: String!): StudentModel!
+  createClass(createClassInput: CreateClassInput!): ClassModel!
+  deletedeleteClass(id: String!): ClassModel!
+}
+
+input CreateStudentInput {
+  name: String!
+  classId: String!
+}
+
+input UpdateClassInput {
+  name: String!
+}
+
+input CreateClassInput {
+  name: String!
+}

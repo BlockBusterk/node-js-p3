@@ -6,12 +6,13 @@ import { RolesGuard } from "src/auth/guards/role.guard";
 import { StudentController } from "src/controllers/student/student.controller";
 import { Class } from "src/entities/class.entity";
 import { Student } from "src/entities/student.entity";
+import { StudentResolver } from "src/graphql/resolvers/student.resolver";
 import { StudentService } from "src/services/student/student.service";
 
 @Module({
     imports: [AuthModule, TypeOrmModule.forFeature([Student, Class])],
     controllers: [StudentController],
-    providers: [StudentService,
+    providers: [StudentService, StudentResolver
       // {
       //   provide: APP_GUARD,
       //   useClass: RolesGuard,

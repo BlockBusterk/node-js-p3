@@ -5,7 +5,7 @@ import { UpdateStudentDto } from 'src/dto/student/update-student.dto';
 import { Class } from 'src/entities/class.entity';
 import { Student } from 'src/entities/student.entity';
 import { ErrorResponse } from 'src/errors/ErrorResponse';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class StudentService {
@@ -208,7 +208,7 @@ export class StudentService {
         throw new ErrorResponse('Class Name is required', 404);
       }
 
-      const classD = await this.classRepository.findOneBy({ name: className });
+      const classD = await this.classRepository.findOneBy({ name: Like(className) });
       if (!classD) {
         throw new ErrorResponse('This class is not exist', 404);
       }

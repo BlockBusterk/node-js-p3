@@ -10,8 +10,6 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class ClassService {
  constructor(
-     @InjectRepository(Student)
-     private readonly studentRepository: Repository<Student>,
      @InjectRepository(Class)
      private readonly classRepository: Repository<Class>,
    ){}
